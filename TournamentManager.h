@@ -6,6 +6,8 @@
 #include <functional>
 #include <string>
 #include <map>
+#include <mutex>
+
 #include <stdlib.h>
 
 #include "PlayerAlgorithm.h"
@@ -20,8 +22,10 @@ private:
     std::map<std::string, playerAlgorithmPtr> id_to_algorithm;
     std::string so_directory;
     size_t thread_count;
+    std::mutex id_to_play_count_mutex;
     std::map<std::string, size_t> id_to_play_count;
     size_t player_count;
+    std::vector<std::thread> threads;
     /* 
      * The tournament manager will be a singleton. Therefore, we forbid
      * direct instantiation of it. We don't want to use only static variables due to static
@@ -33,7 +37,10 @@ private:
                          thread_count(4),
                          id_to_play_count(),
                          player_count(0) {}
+    
     void loadAllPlayers();
+    
+    void runOneMatch();
 
 public:
     static TournamentManager& getInstance()
@@ -46,6 +53,7 @@ public:
     void onPlayerRegistration(std::string &id, playerAlgorithmPtr algorithm)
     {
         id_to_algorithm[id] = algorithm;
+        player_count++;
     }
     
     void setSODirectory(const std::string &so_directory)

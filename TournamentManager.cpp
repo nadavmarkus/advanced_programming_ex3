@@ -1,6 +1,8 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <condition_variable>
+#include <deque>
 #include <dlfcn.h>
 
 /* Note: I don't use the filesystem header because it exists only from c++17 onwards. */
@@ -10,23 +12,19 @@
 
 #include "TournamentManager.h"
 
-void TournamentManager::loadAllPlayers()
+struct single_game_specs
 {
-    
+    std::string player1_id;
+    std::string player2_id;
 }
 
-void TournamentManager::run()
+void TournamentManager::loadAllPlayers()
 {
-    loadAllPlayers();
-    
-    if (player_count < 2) {
-        //TODO: Implement me.
-    }
-    
     DIR *raw_so_dir = opendir(so_directory.c_str());
     
     if (NULL == raw_so_dir) {
         //TODO: Handle error.
+        return;
     }
     
     struct dirent *dir_entry;
@@ -41,6 +39,52 @@ void TournamentManager::run()
             }
         }
     }
+    
+    (void) closedir(raw_so_dir);
+}
+
+void TournamentManager::workerThread()
+{
+    for (;;) {
+        
+    }
+}
+
+void TournamentManager::runMatchesAsynchronously()
+{
+    
+    for (size_t i = 0; i < thread_count - 1; ++i) {
+        threads.push_back(std::thread(workerThread));
+    }
+    
+    
+}
+
+void TournamentManager::runMatchesSynchronously()
+{
+    
+}
+
+void TournamentManager::runMatches()
+{
+    if (thread_count > 1) {
+        runMatchesAsynchronously();
+    
+    } else {
+        runMatchesSynchronously();
+    }
+}
+
+void TournamentManager::run()
+{
+    loadAllPlayers();
+    
+    if (player_count < 2) {
+        //TODO: Handle error
+        return;
+    }
+    
+    runMatches();
 }
 
 
