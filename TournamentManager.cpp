@@ -3,6 +3,7 @@
 #include <iostream>
 #include <condition_variable>
 #include <deque>
+#include <random>
 #include <dlfcn.h>
 
 /* Note: I don't use the filesystem header because it exists only from c++17 onwards. */
@@ -12,11 +13,13 @@
 
 #include "TournamentManager.h"
 
-struct single_game_specs
+struct WorkItem
 {
+public:
+    bool should_terminate;
     std::string player1_id;
     std::string player2_id;
-}
+};
 
 void TournamentManager::loadAllPlayers()
 {
