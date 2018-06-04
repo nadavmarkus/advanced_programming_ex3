@@ -4,6 +4,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <vector>
 #include <condition_variable>
 
 template <class T>
@@ -22,6 +23,7 @@ public:
      */
     T pop();
     void push(T &element);
+    void push(std::vector<T> &elements);
 };
 
 #endif

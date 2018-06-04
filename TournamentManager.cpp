@@ -53,6 +53,20 @@ void TournamentManager::workerThread()
     }
 }
 
+void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
+{
+    std::map<std::string, size_t> scheduled_matches;
+    
+    for (const auto &pair: id_to_play_count) {
+        while (scheduled_matches[pair.first] < TournamentManager::REQUIRED_GAMES) {
+            /* We rely on the fact that eventually we will find a suitable combatant. */
+            for (;;) {
+                
+            }
+        }
+    }
+}
+
 void TournamentManager::runMatchesAsynchronously()
 {
     
