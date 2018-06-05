@@ -36,7 +36,7 @@
 
 using piece_set_iterator = std::set<ConcretePoint>::iterator;
 
-class RSPPlayer_305261901 : public PlayerAlgorithm
+class RSPPlayer_123456789 : public PlayerAlgorithm
 {
 private:
     ConcreteBoard my_board_view;
@@ -445,7 +445,7 @@ private:
     }
     
 public:
-    RSPPlayer_305261901() : my_board_view(),
+    RSPPlayer_123456789() : my_board_view(),
                             my_player_number(0),
                             other_player(0),
                             vector_to_fill(nullptr),

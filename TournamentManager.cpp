@@ -23,6 +23,7 @@ void TournamentManager::loadAllPlayers()
     
     if (nullptr == raw_so_dir) {
         //TODO: Handle error.
+        assert(false);
         return;
     }
     
@@ -31,11 +32,25 @@ void TournamentManager::loadAllPlayers()
     while (nullptr != (dir_entry = readdir(raw_so_dir))) {
         if (DT_REG == dir_entry->d_type) {
             /* Let's attempt to load the potential file. */
-            void *algorithm_so = dlopen(dir_entry->d_name, RTLD_NOW);
+            std::string name(dir_entry->d_name);
+            std::string prefix("RPSPlayer_");
+            
+            if (0 != name.compare(0, prefix.size(), prefix)
+                /* 
+                 * Note that these access are safe, due to the fact that we are guaranteed
+                 * in this stage that the file name has at the substring RPSPlayer_
+                 */
+                || 'o' != name[name.size() - 1]
+                || 's' != name[name.size() - 2]) {
+                /* This is not another player's lib. */
+                continue;
+            }
+            void *algorithm_so = dlopen((so_directory + name).c_str(), RTLD_NOW);
             
             if (nullptr == algorithm_so) {
+                std::cout << dlerror() << std::endl;
                 // TODO: Handle error
-                assert(false);
+                //assert(false);
             }
         }
     }
