@@ -108,14 +108,14 @@ private:
             
             verifyJokerPositioning(player, *position);
             
-            if (piece_counters[type] > Globals::ALLOWED_PIECES_COUNT[type]) {
+            if (piece_counters[type] > Globals::getAllowedPieceCount(type)) {
                 error_message << "Player " << player << " has too many pieces of type " << type;
                 throw PositionError(error_message.str());
             }
         }
         
         /* Verify flag count. */
-        if (piece_counters['F'] != Globals::ALLOWED_PIECES_COUNT['F']) {
+        if (piece_counters['F'] != Globals::getAllowedPieceCount('F')) {
             error_message << "Player " << player << " invalid flag count";
             throw PositionError(error_message.str());
         }
@@ -471,8 +471,6 @@ public:
             PlayerAlgorithm &player_2_algorithm,
             std::string &final_message)
     {
-        Globals::initGlobals();
-        
         player1 = &player_1_algorithm;
         player2 = &player_2_algorithm;
         
@@ -509,8 +507,8 @@ public:
             
         } else {
         
-            player1_flags = Globals::ALLOWED_PIECES_COUNT['F'];
-            player2_flags = Globals::ALLOWED_PIECES_COUNT['F'];
+            player1_flags = Globals::getAllowedPieceCount('F');
+            player2_flags = Globals::getAllowedPieceCount('F');
             
             winner = doMoves();
             game_over_message << "Board:" << std::endl;

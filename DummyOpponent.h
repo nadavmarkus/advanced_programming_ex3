@@ -85,7 +85,7 @@ private:
     
     void placePiecesAtRandomPosition(char type)
     {
-        for (size_t i = 0; i < Globals::ALLOWED_PIECES_COUNT[type]; ++i) {
+        for (size_t i = 0; i < Globals::getAllowedPieceCount(type); ++i) {
             placeOnePieceAtRandomPosition(type);
         }
     }
