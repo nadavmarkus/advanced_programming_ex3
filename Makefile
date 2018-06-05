@@ -1,8 +1,8 @@
 COMP = g++-5
-OBJS = main.o TournamentManager.o BlockingQueue.o 
+OBJS = main.o TournamentManager.o
 EXEC = ex3
 CPP_COMP_FLAG = -std=gnu++14 -g -Wall -Wextra \
--Werror -pedantic-errors -DNDEBUG
+-Werror -pedantic-errors -DNDEBUG -g
 LINKING_LIBS = -ldl -lpthread
 DEPS = *.h
 

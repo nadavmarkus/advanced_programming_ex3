@@ -10,6 +10,8 @@
 
 #include <map>
 
+#include <mutex>
+
 namespace Globals
 {
     constexpr size_t M = 10;
@@ -21,6 +23,9 @@ namespace Globals
     void initGlobals()
     {
         static bool initialized = false;
+        static std::mutex mutex;
+        std::lock_guard<std::mutex> lock(mutex);
+        
         if (initialized) {
             return;
         }

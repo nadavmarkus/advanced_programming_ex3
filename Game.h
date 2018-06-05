@@ -462,32 +462,19 @@ private:
     }
 
 public:
-    /* The main interface of this class. Simply runs the game until completion. */
-    void run(bool player1_file, bool player2_file)
+    /* 
+     * The main interface of this class. Simply runs the game until completion.
+     * returns the winner.
+     * A game over message is also retrieved as well.
+     */
+    int run(PlayerAlgorithm &player_1_algorithm,
+            PlayerAlgorithm &player_2_algorithm,
+            std::string &final_message)
     {
         Globals::initGlobals();
-        AutoPlayerAlgorithm player1_auto_algorithm, player2_auto_algorithm;
-        FilePlayerAlgorithm player1_file_algorithm, player2_file_algorithm;
         
-        std::ofstream output_file;
-        output_file.open("./rps.output", std::ofstream::out | std::ofstream::trunc);
-        
-        if (output_file.fail()) {
-            std::cout << "Failed to open output file, aborting." << std::endl;
-            return;
-        }
-        
-        if (player1_file) {
-            player1 = &player1_file_algorithm;
-        } else {
-            player1 = &player1_auto_algorithm;
-        }
-        
-        if (player2_file) {
-            player2 = &player2_file_algorithm;
-        } else {
-            player2 = &player2_auto_algorithm;
-        }
+        player1 = &player_1_algorithm;
+        player2 = &player_2_algorithm;
         
         player1->getInitialPositions(1, player1_positions);
         player2->getInitialPositions(2, player2_positions);
@@ -531,8 +518,8 @@ public:
         }
         
         game_over_message << "Winner is " << winner << std::endl;
-        std::cout << game_over_message.str();
-        output_file << game_over_message.str();
+        final_message = game_over_message.str();
+        return winner;
     }
 };
 

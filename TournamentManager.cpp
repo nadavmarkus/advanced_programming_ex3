@@ -5,6 +5,7 @@
 #include <random>
 #include <cassert>
 #include <dlfcn.h>
+#include <mutex>
 
 /* Note: I don't use the filesystem header because it exists only from c++17 onwards. */
 #include <dirent.h>
@@ -12,6 +13,8 @@
 #include <sys/types.h>
 
 #include "TournamentManager.h"
+#include "Game.h"
+#include "PlayerAlgorithm.h"
 
 void TournamentManager::loadAllPlayers()
 {
@@ -38,10 +41,54 @@ void TournamentManager::loadAllPlayers()
     (void) closedir(raw_so_dir);
 }
 
+/* Note: The caller is responsible for locking. */
+void TournamentManager::incrementIfNeeded(const std::string &id, size_t how_much)
+{
+    if (id_to_play_count[id] < TournamentManager::REQUIRED_GAMES) {
+        id_to_points[id] += how_much;
+    }
+}
+
 void TournamentManager::workerThread()
 {
     for (;;) {
+        const WorkItem &work_item = work_queue.pop();
         
+        if (work_item.should_terminate) {
+            break;
+        }
+        
+        std::unique_ptr<PlayerAlgorithm> player1 = id_to_algorithm[work_item.player1_id]();
+        std::unique_ptr<PlayerAlgorithm> player2 = id_to_algorithm[work_item.player2_id]();
+        std::string message;
+        
+        int winner = Game().run(*player1, *player2, message);
+        
+        {
+            std::lock_guard<std::mutex> lock(global_stats_mutex);
+            
+            switch(winner) {
+                case 0:
+                    incrementIfNeeded(work_item.player1_id, 1);
+                    incrementIfNeeded(work_item.player2_id, 1);
+                    break;
+                
+                case 1:
+                    incrementIfNeeded(work_item.player1_id, 3);
+                    break;
+                    
+                case 2:
+                    incrementIfNeeded(work_item.player2_id, 3);
+                    break;
+                    
+                default:
+                    /* Should not happen. */
+                    assert(false);
+            }
+            
+            id_to_play_count[work_item.player1_id]++;
+            id_to_play_count[work_item.player2_id]++;
+        }
     }
 }
 
@@ -62,12 +109,12 @@ void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
     for (const auto &pair: id_to_play_count) {
         std::string current = pair.first;
         while (scheduled_matches[current] < TournamentManager::REQUIRED_GAMES) {
-            /* We rely on the fact that eventually we will find a suitable opponent. */
             for (;;) {
                 
                 size_t index = distribution(generator);
                 std::string opponent = all_ids[index];
                 
+                /* We rely on the fact that eventually we will find a suitable opponent. */
                 if (opponent == current) {
                     continue;
                 }
@@ -111,7 +158,7 @@ void TournamentManager::runMatchesAsynchronously()
 
 void TournamentManager::runMatchesSynchronously()
 {
-    
+    //TODO: Implement me.
 }
 
 void TournamentManager::runMatches()

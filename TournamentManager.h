@@ -39,8 +39,11 @@ private:
     std::map<std::string, playerAlgorithmPtr> id_to_algorithm;
     std::string so_directory;
     size_t thread_count;
-    std::mutex id_to_play_count_mutex;
+    
+    std::mutex global_stats_mutex;
     std::map<std::string, size_t> id_to_play_count;
+    std::map<std::string, size_t> id_to_points;
+    
     size_t player_count;
     BlockingQueue<WorkItem> work_queue;
     /* 
@@ -63,6 +66,7 @@ private:
     void runMatchesSynchronously();
     void runMatches();
     void workerThread();
+    void incrementIfNeeded(const std::string &id, size_t how_much);
 
 public:
     static TournamentManager& getInstance()
