@@ -217,6 +217,7 @@ void TournamentManager::runMatches()
     
     std::cout << "Printing results.. " << std::endl;
     /* Let's print the results. */
+    //TODO: Print in descending order
     for (const auto &pair: id_to_points) {
         std::cout << pair.first << " " << pair.second << std::endl;
     }
