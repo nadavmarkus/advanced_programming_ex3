@@ -67,6 +67,7 @@ private:
     void runMatches();
     void workerThread();
     void incrementIfNeeded(const std::string &id, size_t how_much);
+    void updateWithItemResults(const WorkItem &work_item, int winner);
 
 public:
     static TournamentManager& getInstance()

@@ -47,6 +47,12 @@ public:
             push(element);
         }
     }
+    
+    bool empty() const
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        return queue.empty();
+    }
 };
 
 #endif

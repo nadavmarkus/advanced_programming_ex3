@@ -49,6 +49,32 @@ void TournamentManager::incrementIfNeeded(const std::string &id, size_t how_much
     }
 }
 
+/* Note: The caller is responsible for locking. */
+void TournamentManager::updateWithItemResults(const WorkItem &work_item, int winner)
+{
+    switch(winner) {
+        case 0:
+            incrementIfNeeded(work_item.player1_id, 1);
+            incrementIfNeeded(work_item.player2_id, 1);
+            break;
+        
+        case 1:
+            incrementIfNeeded(work_item.player1_id, 3);
+            break;
+            
+        case 2:
+            incrementIfNeeded(work_item.player2_id, 3);
+            break;
+            
+        default:
+            /* Should not happen. */
+            assert(false);
+    }
+    
+    id_to_play_count[work_item.player1_id]++;
+    id_to_play_count[work_item.player2_id]++;
+}
+
 void TournamentManager::workerThread()
 {
     for (;;) {
@@ -66,28 +92,7 @@ void TournamentManager::workerThread()
         
         {
             std::lock_guard<std::mutex> lock(global_stats_mutex);
-            
-            switch(winner) {
-                case 0:
-                    incrementIfNeeded(work_item.player1_id, 1);
-                    incrementIfNeeded(work_item.player2_id, 1);
-                    break;
-                
-                case 1:
-                    incrementIfNeeded(work_item.player1_id, 3);
-                    break;
-                    
-                case 2:
-                    incrementIfNeeded(work_item.player2_id, 3);
-                    break;
-                    
-                default:
-                    /* Should not happen. */
-                    assert(false);
-            }
-            
-            id_to_play_count[work_item.player1_id]++;
-            id_to_play_count[work_item.player2_id]++;
+            updateWithItemResults(work_item, winner);
         }
     }
 }
@@ -154,11 +159,23 @@ void TournamentManager::runMatchesAsynchronously()
     for (auto &thread: threads) {
         thread.join();
     }
+    
+    assert(work_queue.empty());
 }
 
 void TournamentManager::runMatchesSynchronously()
 {
-    //TODO: Implement me.
+    std::vector<WorkItem> work_vector;
+    createMatchesWork(work_vector);
+    
+    for (const auto &work_item: work_vector) {
+        std::unique_ptr<PlayerAlgorithm> player1 = id_to_algorithm[work_item.player1_id]();
+        std::unique_ptr<PlayerAlgorithm> player2 = id_to_algorithm[work_item.player2_id]();
+        std::string message;
+        
+        int winner = Game().run(*player1, *player2, message);
+        updateWithItemResults(work_item, winner);
+    }
 }
 
 void TournamentManager::runMatches()
