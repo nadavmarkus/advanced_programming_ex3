@@ -37,7 +37,7 @@ void TournamentManager::loadAllPlayers()
             
             if (0 != name.compare(0, prefix.size(), prefix)
                 /* 
-                 * Note that these access are safe, due to the fact that we are guaranteed
+                 * Note that these reads are safe, due to the fact that we are guaranteed
                  * in this stage that the file name has at the substring RPSPlayer_
                  */
                 || 'o' != name[name.size() - 1]
@@ -48,9 +48,8 @@ void TournamentManager::loadAllPlayers()
             void *algorithm_so = dlopen((so_directory + name).c_str(), RTLD_NOW);
             
             if (nullptr == algorithm_so) {
+                std::cerr << "Failed to load player from " << name << std::endl;
                 std::cout << dlerror() << std::endl;
-                // TODO: Handle error
-                //assert(false);
             }
         }
     }
@@ -97,6 +96,12 @@ void TournamentManager::workerThread()
     for (;;) {
         const WorkItem &work_item = work_queue.pop();
         
+        {
+            std::lock_guard<std::mutex> lock(global_stats_mutex);
+            std::cout << "thread " << std::this_thread::get_id() << std::endl;
+            std::cout << "Running between '" << work_item.player1_id << "' and '" << work_item.player2_id << "'" << std::endl;
+        }
+        
         if (work_item.should_terminate) {
             break;
         }
@@ -120,7 +125,7 @@ void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
     std::default_random_engine generator;
     std::vector<std::string> all_ids;
     
-    for (const auto &pair: id_to_play_count) {
+    for (const auto &pair: id_to_algorithm) {
         all_ids.push_back(pair.first);
     }
     
@@ -128,7 +133,7 @@ void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
     
     std::uniform_int_distribution<size_t> distribution(0, all_ids.size() - 1);
     
-    for (const auto &pair: id_to_play_count) {
+    for (const auto &pair: id_to_algorithm) {
         std::string current = pair.first;
         while (scheduled_matches[current] < TournamentManager::REQUIRED_GAMES) {
             for (;;) {
@@ -164,10 +169,12 @@ void TournamentManager::runMatchesAsynchronously()
     std::vector<WorkItem> work_vector;
     createMatchesWork(work_vector);
     
+    std::cout << "Generated " << work_vector.size() << " jobs" << std::endl;
+    
     /* We will push all the jobs, and additionally, we will create the termination jobs afterwards. */
     work_queue.push(work_vector);
     
-    WorkItem termination_item(false);
+    WorkItem termination_item(true);
     for (size_t i = 0; i < thread_count - 1; ++i) {
         work_queue.push(termination_item);
     }
@@ -190,22 +197,32 @@ void TournamentManager::runMatchesSynchronously()
         std::unique_ptr<PlayerAlgorithm> player2 = id_to_algorithm[work_item.player2_id]();
         std::string message;
         
-        int winner = Game().run(*player1, *player2, message);
+        Game game;
+        int winner = game.run(*player1, *player2, message);
         updateWithItemResults(work_item, winner);
     }
 }
 
 void TournamentManager::runMatches()
 {
+    std::cout << "Going to run.. " << std::endl;
     if (thread_count > 1) {
+        std::cout << "Running async.. " << std::endl;
         runMatchesAsynchronously();
     
     } else {
+        std::cout << "Running sync.. " << std::endl;
         runMatchesSynchronously();
     }
     
+    std::cout << "Printing results.. " << std::endl;
     /* Let's print the results. */
     for (const auto &pair: id_to_points) {
+        std::cout << pair.first << " " << pair.second << std::endl;
+    }
+    
+    std::cout << "Play count: " << std::endl;
+    for (const auto &pair: id_to_play_count) {
         std::cout << pair.first << " " << pair.second << std::endl;
     }
 }

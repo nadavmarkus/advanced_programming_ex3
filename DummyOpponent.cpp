@@ -5,5 +5,5 @@
 __attribute__((constructor))
 void constructor()
 {
-    REGISTER_ALGORITHM(123456789);
+    volatile REGISTER_ALGORITHM(123456789);
 }

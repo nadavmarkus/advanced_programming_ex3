@@ -18,27 +18,9 @@ namespace Globals
     constexpr size_t N = 10;
     constexpr size_t MOVES_UNTIL_TIE = 50;
 
-    std::map<char, unsigned int> ALLOWED_PIECES_COUNT;
+    extern std::map<char, unsigned int> ALLOWED_PIECES_COUNT;
 
-    void initGlobals()
-    {
-        static bool initialized = false;
-        static std::mutex mutex;
-        std::lock_guard<std::mutex> lock(mutex);
-        
-        if (initialized) {
-            return;
-        }
-        
-        ALLOWED_PIECES_COUNT['R'] = 2;
-        ALLOWED_PIECES_COUNT['P'] = 5;
-        ALLOWED_PIECES_COUNT['S'] = 1;
-        ALLOWED_PIECES_COUNT['B'] = 2;
-        ALLOWED_PIECES_COUNT['J'] = 2;
-        ALLOWED_PIECES_COUNT['F'] = 1;
-        
-        initialized = true;
-    }
+    void initGlobals();
 }
 
 #endif
