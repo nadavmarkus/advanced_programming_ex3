@@ -4,12 +4,13 @@
 #include <condition_variable>
 #include <random>
 #include <cassert>
-#include <dlfcn.h>
 #include <mutex>
+#include <iostream>
 
 /* Note: I don't use the filesystem header because it exists only from c++17 onwards. */
 #include <dirent.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 #include <sys/types.h>
 
 #include "TournamentManager.h"
@@ -34,6 +35,7 @@ void TournamentManager::loadAllPlayers()
             
             if (nullptr == algorithm_so) {
                 // TODO: Handle error
+                assert(false);
             }
         }
     }
@@ -186,6 +188,11 @@ void TournamentManager::runMatches()
     } else {
         runMatchesSynchronously();
     }
+    
+    /* Let's print the results. */
+    for (const auto &pair: id_to_points) {
+        std::cout << pair.first << " " << pair.second << std::endl;
+    }
 }
 
 void TournamentManager::run()
@@ -193,7 +200,7 @@ void TournamentManager::run()
     loadAllPlayers();
     
     if (player_count < 2) {
-        //TODO: Handle error
+        std::cerr << "Please supply at least 2 players in the so directory." << std::endl;
         return;
     }
     
