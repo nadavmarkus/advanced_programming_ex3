@@ -11,8 +11,25 @@
 #include <stdlib.h>
 
 #include "PlayerAlgorithm.h"
+#include "BlockingQueue.h"
 
 using playerAlgorithmPtr = std::function<std::unique_ptr<PlayerAlgorithm>()>;
+
+/* We define WorkItem here although it is not part of the actual interface since it is needed for BlockingQueue */
+struct WorkItem
+{
+public:
+    bool should_terminate;
+    const std::string player1_id;
+    const std::string player2_id;
+    
+    WorkItem(const std::string &id1, const std::string &id2) :should_terminate(false), player1_id(id1), player2_id(id2) {}
+    WorkItem(): should_terminate(false), player1_id(), player2_id() {}
+    WorkItem(bool should_terminate, const std::string &id1, const std::string &id2): should_terminate(should_terminate),
+                                                                         player1_id(id1),
+                                                                         player2_id(id2) {}
+    WorkItem(bool should_terminate): WorkItem(should_terminate, std::string(), std::string()) {}
+};
 
 class TournamentManager
 {
@@ -25,13 +42,14 @@ private:
     std::mutex id_to_play_count_mutex;
     std::map<std::string, size_t> id_to_play_count;
     size_t player_count;
-    std::vector<std::thread> threads;
+    BlockingQueue<WorkItem> work_queue;
     /* 
      * The tournament manager will be a singleton. Therefore, we forbid
      * direct instantiation of it. We don't want to use only static variables due to static
      * variables instantiation fiascos, so we still use a single instance that has its access
      * serialized via the public getInstance method.
-     */ 
+     */
+    //TODO: Complete constructor
     TournamentManager(): id_to_algorithm(),
                          so_directory("./"),
                          thread_count(4),
@@ -39,8 +57,12 @@ private:
                          player_count(0) {}
     
     void loadAllPlayers();
-    
+    void createMatchesWork(std::vector<WorkItem> &work_vector);
     void runOneMatch();
+    void runMatchesAsynchronously();
+    void runMatchesSynchronously();
+    void runMatches();
+    void workerThread();
 
 public:
     static TournamentManager& getInstance()
