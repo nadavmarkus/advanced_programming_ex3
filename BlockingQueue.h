@@ -21,9 +21,28 @@ public:
      *  The underlying object can supply a move semantic copy constructor
      * to enhance performance
      */
-    T pop();
-    void push(T &element);
-    void push(std::vector<T> &elements);
+    T pop()
+    {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        queue_condition.wait(lock, [&]{return !queue.empty(); });
+        T to_return = queue.front();
+        queue.pop();
+        return to_return;
+    }
+    
+    void push(const T &element)
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        queue.push(element);
+        queue_condition.notify_one();
+    }
+    
+    void push(std::vector<T> &elements)
+    {
+        for (const auto &element: elements) {
+            push(element);
+        }
+    }
 };
 
 #endif
