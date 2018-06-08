@@ -38,7 +38,7 @@ void TournamentManager::loadAllPlayers()
             if (0 != name.compare(0, prefix.size(), prefix)
                 /* 
                  * Note that these reads are safe, due to the fact that we are guaranteed
-                 * in this stage that the file name has at the substring RPSPlayer_
+                 * in this stage that the file name has at least the substring 'RPSPlayer_'
                  */
                 || 'o' != name[name.size() - 1]
                 || 's' != name[name.size() - 2]) {
@@ -175,7 +175,7 @@ void TournamentManager::runMatchesAsynchronously()
     work_queue.push(work_vector);
     
     WorkItem termination_item(true);
-    for (size_t i = 0; i < thread_count - 1; ++i) {
+    for (size_t i = 0; i < threads.size(); ++i) {
         work_queue.push(termination_item);
     }
     
@@ -184,6 +184,7 @@ void TournamentManager::runMatchesAsynchronously()
         thread.join();
     }
     
+    /* There should be no work items left to process. The termination jobs should the last jobs executed. */
     assert(work_queue.empty());
 }
 
@@ -207,11 +208,11 @@ void TournamentManager::runMatches()
 {
     std::cout << "Going to run.. " << std::endl;
     if (thread_count > 1) {
-        std::cout << "Running async.. " << std::endl;
+        std::cout << "Running asynchronously.. " << std::endl;
         runMatchesAsynchronously();
     
     } else {
-        std::cout << "Running sync.. " << std::endl;
+        std::cout << "Running synchronously.. " << std::endl;
         runMatchesSynchronously();
     }
     
