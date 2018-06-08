@@ -7,7 +7,6 @@ CPP_COMP_FLAG = -std=gnu++14 -g -Wall -Wextra \
 LINKING_LIBS = -ldl -lpthread
 DEPS = *.h
 OUTPUT_LIB = RPSPlayer_305261901.so
-DUMMY_OPPONENT = RPSPlayer_123456789.so
 SHARED_OBJECT_FLAGS = -fPIC -shared
 
 rps_tournamet: $(OBJS) $(ALGORITHM_OBJS)
@@ -19,8 +18,12 @@ rps_tournamet: $(OBJS) $(ALGORITHM_OBJS)
 rps_lib: SharedObjectAlgorithm.cpp $(DEPS) 
 	$(COMP) $(CPP_COMP_FLAG) SharedObjectAlgorithm.cpp $(SHARED_OBJECT_FLAGS) $(ALGORITHM_OBJS) -o $(OUTPUT_LIB)
     
-dummy_opponent: DummyOpponent.cpp $(DEPS) 
-	$(COMP) $(CPP_COMP_FLAG) DummyOpponent.cpp $(SHARED_OBJECT_FLAGS) $(ALGORITHM_OBJS) -o $(DUMMY_OPPONENT)
+OPPONENTS := $(patsubst DummyOpponent%.cpp,RPSPlayer_%.so,$(wildcard DummyOpponent?*.cpp))
+
+dummy_opponents: $(OPPONENTS)
+
+RPSPlayer_%.so: DummyOpponent%.cpp $(ALGORITHM_OBJS)
+	$(COMP) $(CPP_COMP_FLAG) $< $(SHARED_OBJECT_FLAGS) $(ALGORITHM_OBJS) -o $@
 
 clean:
-	rm -f $(OBJS) $(EXEC) $(OUTPUT_LIB) $(ALGORITHM_OBJS) $(DUMMY_OPPONENT)
+	rm -f $(OBJS) $(EXEC) $(OUTPUT_LIB) $(ALGORITHM_OBJS) $(DUMMY_OPPONENT) 
