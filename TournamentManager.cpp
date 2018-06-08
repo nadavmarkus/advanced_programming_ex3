@@ -25,8 +25,7 @@ void TournamentManager::loadAllPlayers()
     DIR *raw_so_dir = opendir(so_directory.c_str());
     
     if (nullptr == raw_so_dir) {
-        //TODO: Handle error.
-        assert(false);
+        std::cerr << "Failed to retrieve dir entries from the so dir." << std::endl;
         return;
     }
     

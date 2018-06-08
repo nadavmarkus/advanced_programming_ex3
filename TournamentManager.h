@@ -15,7 +15,12 @@
 
 using playerAlgorithmPtr = std::function<std::unique_ptr<PlayerAlgorithm>()>;
 
-/* We define WorkItem here although it is not part of the actual interface since it is needed for BlockingQueue */
+/* 
+ * We define WorkItem here although it is not part of the actual interface since it is needed for BlockingQueue
+ * I have chosen to implement a producer consumer model, where each worker threads retrieves a job from the work queue,
+ * process it, and updates the global state. To indicate that no more work is to be done, a special termination job
+ * is pushed to the queue.
+ */
 struct WorkItem
 {
 public:
@@ -52,12 +57,15 @@ private:
      * variables instantiation fiascos, so we still use a single instance that has its access
      * serialized via the public getInstance method.
      */
-    //TODO: Complete constructor
     TournamentManager(): id_to_algorithm(),
                          so_directory("./"),
                          thread_count(4),
+                         global_stats_mutex(),
                          id_to_play_count(),
-                         player_count(0) {}
+                         id_to_points(),
+                         player_count(0),
+                         work_queue()
+                         {}
     
     void loadAllPlayers();
     void createMatchesWork(std::vector<WorkItem> &work_vector);

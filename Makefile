@@ -26,4 +26,7 @@ RPSPlayer_%.so: DummyOpponent%.cpp $(ALGORITHM_OBJS)
 	$(COMP) $(CPP_COMP_FLAG) $< $(SHARED_OBJECT_FLAGS) $(ALGORITHM_OBJS) -o $@
 
 clean:
-	rm -f $(OBJS) $(EXEC) $(OUTPUT_LIB) $(ALGORITHM_OBJS) $(DUMMY_OPPONENT) 
+	rm -f $(OBJS) $(EXEC) $(OUTPUT_LIB) $(ALGORITHM_OBJS) $(DUMMY_OPPONENT)
+	rm -f $(wildcard RPSPlayer_*.so)
+	rm -f $(wildcard DummyOpponent?*.h)
+	rm -f $(wildcard DummyOpponent?*.cpp)
