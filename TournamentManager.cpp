@@ -99,11 +99,11 @@ void TournamentManager::workerThread()
     for (;;) {
         const WorkItem &work_item = work_queue.pop();
         
-        {
-            std::lock_guard<std::mutex> lock(global_stats_mutex);
-            std::cout << "thread " << std::this_thread::get_id() << std::endl;
-            std::cout << "Running between '" << work_item.player1_id << "' and '" << work_item.player2_id << "'" << std::endl;
-        }
+        // {
+            // std::lock_guard<std::mutex> lock(global_stats_mutex);
+            // std::cout << "thread " << std::this_thread::get_id() << std::endl;
+            // std::cout << "Running between '" << work_item.player1_id << "' and '" << work_item.player2_id << "'" << std::endl;
+        // }
         
         if (work_item.should_terminate) {
             break;
@@ -156,9 +156,9 @@ void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
         std::string current = all_ids[i];
         while (scheduled_matches[current] < TournamentManager::REQUIRED_GAMES) {
             std::vector<size_t> &current_matches = planned_games_count[i];
+            
             size_t min_pos = std::distance(current_matches.begin(),
                                            std::min_element(current_matches.begin(), current_matches.end()));
-            
             assert(0 <= min_pos && min_pos < all_ids.size());
             
             std::string opponent = all_ids[min_pos];
@@ -168,6 +168,9 @@ void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
             
             scheduled_matches[current]++;
             scheduled_matches[opponent]++;
+            
+            planned_games_count[i][min_pos]++;
+            planned_games_count[min_pos][i]++;
         }
     }
 }
