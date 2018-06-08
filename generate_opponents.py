@@ -1,10 +1,11 @@
 #! /usr/bin/python
 
 import shutil
+import sys
 
 
-def main():
-    for i in range(10):
+def main(count):
+    for i in range(count):
         new_file_name = "DummyOpponent{}.{}"
         old_name = "DummyOpponent.{}"
         extensions = ["h", "cpp"]
@@ -22,5 +23,8 @@ def main():
                 f.write(data)
 
 if __name__ == "__main__":
-    main()
+    count = 10
+    if len(sys.argv) > 1:
+        count = int(sys.argv[1])
+    main(count)
 

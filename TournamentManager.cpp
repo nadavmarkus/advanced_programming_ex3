@@ -233,10 +233,24 @@ void TournamentManager::runMatches()
         runMatchesSynchronously();
     }
     
-    std::cout << "Printing results.. " << std::endl;
     /* Let's print the results. */
-    //TODO: Print in descending order
-    for (const auto &pair: id_to_points) {
+    std::cout << "Printing results.. " << std::endl;
+                
+    std::vector<std::pair<std::string, size_t>> sorted;
+    
+    for (const auto &element: id_to_points) {
+        sorted.push_back(element);
+    }
+    
+    auto comparer = [](std::pair<std::string, size_t> a,
+                       std::pair<std::string, size_t> b) -> bool 
+                {
+                    return a.second > b.second;
+                };
+    
+    std::sort(sorted.begin(), sorted.end(), comparer);  
+    
+    for (const auto &pair: sorted) {
         std::cout << pair.first << " " << pair.second << std::endl;
     }
     
