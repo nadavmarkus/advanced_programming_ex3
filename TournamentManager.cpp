@@ -6,6 +6,9 @@
 #include <cassert>
 #include <mutex>
 #include <iostream>
+#include <limits>
+#include <algorithm>
+#include <iterator>
 
 /* Note: I don't use the filesystem header because it exists only from c++17 onwards. */
 #include <dirent.h>
@@ -122,7 +125,6 @@ void TournamentManager::workerThread()
 void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
 {
     std::map<std::string, size_t> scheduled_matches;
-    std::default_random_engine generator;
     std::vector<std::string> all_ids;
     
     for (const auto &pair: id_to_algorithm) {
@@ -131,29 +133,41 @@ void TournamentManager::createMatchesWork(std::vector<WorkItem> &work_vector)
     
     assert(all_ids.size() > 1);
     
-    std::uniform_int_distribution<size_t> distribution(0, all_ids.size() - 1);
+    /*
+     * This vector contains an entry for each possible player.
+     * The entry consists of a vector of play counts. The j'th entry in this vector
+     * contains the amount of scheduled matches against the j'th opponent.
+     * We use this vector to retrieve each time the opponent with which the current player
+     * had the least amount of plays.
+     */
+    std::vector<std::vector<size_t>> planned_games_count;
     
-    for (const auto &pair: id_to_algorithm) {
-        std::string current = pair.first;
+    for (size_t i = 0; i < all_ids.size(); ++i) {
+        planned_games_count.push_back(std::vector<size_t>(all_ids.size()));
+        /* 
+         * The diagonal corresponds to games with ourselves. We explicitly set this to the maximum possible count,
+         * so it will never get chosen.
+         */
+        planned_games_count[i][i] = std::numeric_limits<size_t>::max();
+    }
+    
+    /* Generate the matches - we try to spread evenly as much as possible. */
+    for (size_t i = 0; i < planned_games_count.size(); ++i) {
+        std::string current = all_ids[i];
         while (scheduled_matches[current] < TournamentManager::REQUIRED_GAMES) {
-            for (;;) {
-                
-                size_t index = distribution(generator);
-                std::string opponent = all_ids[index];
-                
-                /* We rely on the fact that eventually we will find a suitable opponent. */
-                if (opponent == current) {
-                    continue;
-                }
-                
-                /* OK - we got a different player. Lets generate a match. */
-                WorkItem item(current, opponent);
-                work_vector.push_back(item);
-                
-                scheduled_matches[current]++;
-                scheduled_matches[opponent]++;
-                break;
-            }
+            std::vector<size_t> &current_matches = planned_games_count[i];
+            size_t min_pos = std::distance(current_matches.begin(),
+                                           std::min_element(current_matches.begin(), current_matches.end()));
+            
+            assert(0 <= min_pos && min_pos < all_ids.size());
+            
+            std::string opponent = all_ids[min_pos];
+            
+            WorkItem item(current, opponent);
+            work_vector.push_back(item);
+            
+            scheduled_matches[current]++;
+            scheduled_matches[opponent]++;
         }
     }
 }
