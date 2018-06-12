@@ -98,12 +98,6 @@ void TournamentManager::workerThread()
     for (;;) {
         const WorkItem &work_item = work_queue.pop();
         
-        // {
-            // std::lock_guard<std::mutex> lock(global_stats_mutex);
-            // std::cout << "thread " << std::this_thread::get_id() << std::endl;
-            // std::cout << "Running between '" << work_item.player1_id << "' and '" << work_item.player2_id << "'" << std::endl;
-        // }
-        
         if (work_item.should_terminate) {
             break;
         }
@@ -250,11 +244,6 @@ void TournamentManager::runMatches()
     std::sort(sorted.begin(), sorted.end(), comparer);  
     
     for (const auto &pair: sorted) {
-        std::cout << pair.first << " " << pair.second << std::endl;
-    }
-    
-    std::cout << "Play count: " << std::endl;
-    for (const auto &pair: id_to_play_count) {
         std::cout << pair.first << " " << pair.second << std::endl;
     }
 }
